@@ -8,12 +8,18 @@
 
 ## 前置状态（已完成）
 
-- ✅ 项目已是 git 仓库，`main` 分支有初始提交
-- ✅ `.env`（含密钥）已被 `.gitignore` 忽略，**不会**被推送
+- ✅ 项目已是 git 仓库，`main` 分支有初始提交，**已推送到 <https://github.com/AKI12345asa/portfolio>**
+- ✅ `.env`（含密钥 + 视频签名链接）已被 `.gitignore` 忽略，**没有**推送上去
 - ✅ `node_modules/` `dist/` `.tools/` `Demo录制/` 均未进仓库，仓库仅 3.68MB
-- ✅ GitHub Pages 工作流已停用（改名为 `deploy.github-pages.yml.disabled`）
+- ✅ GitHub Pages 工作流已移出 `.github/workflows/`，模板留在 `框架文档/参考-github-pages-workflow.yml.txt`
 - ✅ `npm run build` 通过，14 个页面
-- ✅ 支持 `SITE_URL` 环境变量覆盖站点域名
+- ✅ 支持 `SITE_URL`、`VIDEO_BATTLE_URL`、`VIDEO_ARPG_URL` 三个环境变量
+
+> **踩过的两个坑，记录下来避免以后重复：**
+> 1. 第一版把 COS 签名链接写死在 `site.config.ts` 里，GitHub **密钥扫描直接拒绝推送**
+>    （它把 URL 里的 `q-ak=AKID...` 识别成腾讯云 SecretId）。现已改为从环境变量读取。
+> 2. 仓库 token 没有 `workflow` 权限时，GitHub 会拒绝推送 `.github/workflows/` 下的任何文件，
+>    所以工作流模板挪到了 `框架文档/`。
 
 ---
 
@@ -70,7 +76,20 @@ git push -u origin main
    | 安装命令 | 留空或 `npm ci`（`package-lock.json` 已提交） |
    | Node 版本 | 20 或更高 |
 
-5. **环境变量**先留空（还不知道域名）
+5. **环境变量**：先把两个视频变量填上（域名那个等部署完再说）
+
+   | 名称 | 值从哪里来 |
+   |---|---|
+   | `VIDEO_BATTLE_URL` | 本地 `.env` 里 `VIDEO_BATTLE_URL=` 后面那一整行 |
+   | `VIDEO_ARPG_URL` | 本地 `.env` 里 `VIDEO_ARPG_URL=` 后面那一整行 |
+
+   > ⚠️ **这两项不填，线上首页会显示「视频待上传」**。因为签名链接含 SecretId，
+   > 被 GitHub 密钥扫描拦截，只能放环境变量，不能写进代码。
+   > 在本地执行下面这条命令可以直接打印出来复制：
+   > ```powershell
+   > Get-Content .env | Select-String '^VIDEO_'
+   > ```
+
 6. 点**部署**，等 1~3 分钟
 
 ---
@@ -78,7 +97,7 @@ git push -u origin main
 ## 第 4 步：拿到域名后回填
 
 1. 复制部署成功后的域名，形如 `https://xxxxx.edgeone.site`
-2. 回到 EdgeOne 项目 → 设置 → **环境变量**，新增：
+2. 回到 EdgeOne 项目 → 设置 → **环境变量**，再新增一项：
 
    | 名称 | 值 |
    |---|---|
@@ -113,12 +132,20 @@ git push -u origin main
 **构建成功但打开是白屏 / 404**
 → 输出目录填错了，必须是 `dist`。
 
+**首页出现「视频待上传」而不是「演示视频」**
+→ EdgeOne 没配 `VIDEO_BATTLE_URL` / `VIDEO_ARPG_URL`。值是空字符串时 `site.config.ts` 会退化成占位文案。
+   去项目设置补上两个环境变量后重新部署。
+
 **视频打不开，控制台报 403**
-→ 签名链接过期了。重新生成并替换 `src/site.config.ts` 里的 url：
+→ 签名链接过期了。重新生成，然后**同时**更新本地 `.env` 和 EdgeOne 的环境变量：
 ```powershell
 .\视频工具.cmd sign --key works/arpg-demo.mp4   --days 365
 .\视频工具.cmd sign --key works/battle-demo.mp4 --days 365
 ```
+
+**推送被 GitHub 拒绝，提示 GH013 / secret scanning**
+→ 有人又把 COS 签名链接写进代码了。签名 URL 里的 `q-ak=AKID...` 会被识别为腾讯云 SecretId。
+   正确做法是放环境变量，永远不要提交进仓库。
 
 **样式全丢，只有裸 HTML**
 → 我们部署在根路径，**不需要**设 `base`。如果有人建议加 `base`，那是 GitHub Pages 项目页的做法。
