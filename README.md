@@ -115,6 +115,12 @@ python scripts/make-og.py
 
 ## 部署
 
+> **当前线上地址**：<https://personalportfolioforcheck.netlify.app>
+> Netlify 自动构建，`netlify.toml` 固定了构建命令（`npm run build`）和发布目录（`dist`）。
+>
+> ⚠️ `SITE_URL` 环境变量必须以 **`https://`** 开头且不带结尾斜杠，
+> 否则 canonical、og:url、og:image 会写成 `http://`，微信分享卡片抓不到缩略图。
+
 > **实测结论（2026-11）**：EdgeOne Pages 的平台默认域名 `xxx.edgeone.cool` 只提供 **3 小时限时预览**，
 > 不带 `eo_token` 访问返回 401，**不能作为公网地址**。要长期访问必须绑自定义域名，
 > 而本项目加速区域是「中国大陆可用区」（锁定不可改），绑域名必须 ICP 备案。
