@@ -6,9 +6,8 @@
   command = "npm run build"
   publish = "dist"
 
-[build.environment]
-  # Astro 5 要求 Node 18.20.8+ / 20.3+ / 22+，锁定 LTS 保证可重现
-  NODE_VERSION = "20"
+# 不锁定 NODE_VERSION：Netlify 默认版本（24.x）已实测能正常安装依赖，
+# 与本地开发环境一致，避免版本差异引入额外变量。
 
 # 静态资源长缓存；HTML 不缓存，保证改完立刻生效
 [[headers]]
