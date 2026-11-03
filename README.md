@@ -115,10 +115,24 @@ python scripts/make-og.py
 
 ## 部署
 
-> **当前选定的方案是腾讯 EdgeOne Pages**，完整步骤见 [框架文档/部署上线-EdgeOne.md](框架文档/部署上线-EdgeOne.md)。
-> 选它的原因：默认域名免备案、走国内边缘节点。2026-10 实测国内可达性：Netlify 5/5、Vercel 4/5、GitHub Pages 仅 8/16。
+> **实测结论（2026-11）**：EdgeOne Pages 的平台默认域名 `xxx.edgeone.cool` 只提供 **3 小时限时预览**，
+> 不带 `eo_token` 访问返回 401，**不能作为公网地址**。要长期访问必须绑自定义域名，
+> 而本项目加速区域是「中国大陆可用区」（锁定不可改），绑域名必须 ICP 备案。
+>
+> **想当天上线 → 用 Netlify**（免费、有真正公网域名、免备案，实测国内 5/5 可达）。
+> **想要国内节点速度 → 买域名 + 备案 + 绑 EdgeOne**（1~3 周）。
+>
+> 完整说明见 [框架文档/部署上线-EdgeOne.md](框架文档/部署上线-EdgeOne.md)。
 
-### 方案 A：EdgeOne Pages（推荐，国内访问快）
+### 方案 A：Netlify（推荐，最快拿到可用网址）
+
+1. 推到 GitHub
+2. netlify.com 用 GitHub 登录 → Add new site → Import an existing project → 选仓库
+3. 构建命令 `npm run build`，发布目录 `dist`
+4. 设置环境变量 `SITE_URL`、`VIDEO_BATTLE_URL`、`VIDEO_ARPG_URL`
+5. 部署后拿到 `xxx.netlify.app`，可长期使用
+
+### 方案 B：EdgeOne Pages（要备案域名才能真正公网访问）
 
 1. 推到 GitHub
 2. 到 <https://console.cloud.tencent.com/edgeone/pages> → 创建项目 → 连接仓库
