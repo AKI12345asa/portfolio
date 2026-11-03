@@ -1,0 +1,468 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import { site } from '../../site.config';
+
+const modules = (await getCollection('framework')).sort((a, b) => a.data.order - b.data.order);
+
+const totalFiles = modules.reduce((n, m) => n + (m.data.files ?? 0), 0);
+const totalLines = modules.reduce((n, m) => n + (m.data.lines ?? 0), 0);
+
+const baseStack = ['Unity 2022.3', 'URP 14', 'Addressables', 'Cinemachine', 'Odin Inspector', 'UniTask'];
+
+const principles = [
+  {
+    title: '数据与表现分离',
+    text: 'SkillClip 只记录"第几帧发生什么"，怎么做交给 Processor；节点树只描述图，节点怎么跑由实现决定。',
+  },
+  {
+    title: '特性驱动的扫描—注册',
+    text: 'UIWindowData、GOAPAction、NodeLabel 是注册表的键：扫一遍程序集就建好映射，加一个类等于加一个功能。',
+  },
+  {
+    title: '帧驱动集中化',
+    text: 'MonoSystem 用一个静态多播收拢全框架的 Update，于是状态机、行为节点、技能都不必继承 MonoBehaviour。',
+  },
+  {
+    title: '池化与零分配倾向',
+    text: '两套对象池、事件条目池化、检测用 OverlapNonAlloc——GC 敏感的意识贯穿多处（落地程度不一）。',
+  },
+];
+
+const decisions = [
+  {
+    name: '节点树故意不做执行器',
+    text: '框架只提供链路与条件求值，节点自己决定怎么跑。执行逻辑因此分散在各节点里，但加一种节点类型不用改树。',
+  },
+  {
+    name: 'GOAP 刻意不做严格 A*',
+    text: 'GOAP 的搜索空间是 AND/OR 树（一个动作要求所有前置成立），A* 只适用于"每个节点选一个后继"的图。硬套要先展平成世界状态图，代价高，换来的最优性在游戏里用不上。',
+  },
+  {
+    name: '输入层还没接进来',
+    text: 'InputManager 已实现，但还没挂进 InitSystems，也还没有业务侧的实现者。',
+  },
+];
+---
+
+<BaseLayout
+  title="自研框架 MyFrame"
+  description="一套面向动作游戏的自研 Unity 客户端框架：Playable 动画、帧事件战斗、GOAP 决策、节点树、资源池、UI、事件、存档。"
+>
+  <PageHero
+    title="自研框架 MyFrame"
+    lead="面向动作游戏的 Unity 客户端框架。不含业务逻辑，只规定三件事：数据怎么描述、表现怎么挂接、每帧谁来驱动。"
+    count={`${modules.length} 个模块 · ${totalFiles} 文件 · ${(totalLines / 1000).toFixed(1)}k 行`}
+  />
+
+  <div class="wrap body">
+    <!-- 概览 -->
+    <section class="block">
+      <div class="block__head">
+        <h2>它是什么</h2>
+      </div>
+      <div class="intro">
+        <div class="intro__text">
+          <p>
+            MyFrame 是一个独立程序集（<code>MyFrame.asmdef</code>），业务层只依赖它的公开接口，框架内部不认识任何业务类型——所有"业务 ← 框架"的连接点都靠<strong>特性 + 反射扫描</strong>完成。
+          </p>
+          <p>
+            重心不在通用工具，而在四件难做对的事：<strong>动画</strong>（绕开 Animator 手搭混合树）、<strong>战斗</strong>（用帧时间轴描述技能）、<strong>AI</strong>（GOAP 决策与表现状态机并行）、<strong>内容生产</strong>（技能编辑器 / GOAP 编辑器 / 节点树编辑器）。
+          </p>
+        </div>
+
+        <aside class="side">
+          <p class="side__label">技术底座</p>
+          <ul class="side__stack">
+            {baseStack.map((s) => <li class="tag">{s}</li>)}
+          </ul>
+          <dl class="side__stats">
+            <div><dt>代码量</dt><dd>{totalFiles} 文件 · {totalLines.toLocaleString()} 行</dd></div>
+            <div><dt>模块</dt><dd>{modules.length} 个</dd></div>
+            <div><dt>程序集</dt><dd>单程序集，编辑器代码 #if 隔离</dd></div>
+          </dl>
+          <a class="tlink side__repo" href={site.frameworkRepo} target="_blank" rel="noopener noreferrer">
+            GitHub 仓库
+          </a>
+          <p class="side__note">统计口径：本页收录的 {modules.length} 个模块</p>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 架构关系 -->
+    <section class="block">
+      <div class="block__head">
+        <h2>模块关系</h2>
+        <p class="block__hint">战斗是总调度，资源池是公共底座，节点树仍是独立的一块</p>
+      </div>
+      <figure class="figure">
+        <div class="figure__scroll">
+          <img src="/framework/architecture.svg" alt="MyFrame 模块关系图" loading="lazy" decoding="async" />
+        </div>
+        <figcaption>依赖单向：基础设施被所有模块使用，业务层只能看到框架接口</figcaption>
+      </figure>
+      <p class="figure__hint">← 左右滑动查看完整图 →</p>
+    </section>
+
+    <!-- 模块列表 -->
+    <section class="block" id="modules">
+      <div class="block__head">
+        <h2>模块</h2>
+        <p class="block__hint">每个模块都有工作流程图、核心类型和已知问题</p>
+      </div>
+
+      <ol class="modules">
+        {
+          modules.map((m, i) => (
+            <li>
+              <a class="module" href={`/framework/${m.id}/`}>
+                <span class="module__no">{String(i + 1).padStart(2, '0')}</span>
+                <div class="module__main">
+                  <h3>{m.data.title}</h3>
+                  <p>{m.data.summary}</p>
+                  {m.data.highlight && <p class="module__hl">{m.data.highlight}</p>}
+                </div>
+                <span class="module__meta">
+                  {m.data.files ? `${m.data.files} 文件` : ''}
+                  {m.data.lines ? ` · ${m.data.lines.toLocaleString()} 行` : ''}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- 设计取向 -->
+    <section class="block">
+      <div class="block__head">
+        <h2>四条贯穿全框架的设计取向</h2>
+      </div>
+      <ol class="principles">
+        {
+          principles.map((p, i) => (
+            <li>
+              <span class="principles__no">{String(i + 1).padStart(2, '0')}</span>
+              <div>
+                <h3>{p.title}</h3>
+                <p>{p.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <!-- 取舍与计划 -->
+    <section class="block">
+      <div class="block__head">
+        <h2>设计取舍与后续计划</h2>
+        <p class="block__hint">有些是刻意的选择，有些是下一步的工作</p>
+      </div>
+      <ul class="gaps">
+        {
+          decisions.map((g) => (
+            <li>
+              <h3>{g.name}</h3>
+              <p>{g.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .body {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .block {
+    padding-block: 2.25rem;
+  }
+
+  .block + .block {
+    border-top: 1px solid var(--line);
+  }
+
+  .block__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .block__head h2 {
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  .block__hint {
+    font-size: 0.85rem;
+    color: var(--fg-3);
+  }
+
+  /* 概览 */
+  .intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: clamp(2rem, 4vw, 3.5rem);
+    align-items: start;
+  }
+
+  .intro__text p {
+    font-size: 0.97rem;
+    line-height: 1.95;
+    color: var(--fg-2);
+  }
+
+  .intro__text p + p {
+    margin-top: 0.9em;
+  }
+
+  .intro__text strong {
+    color: var(--fg);
+    font-weight: 600;
+  }
+
+  .intro__text code {
+    font-family: var(--f-mono);
+    font-size: 0.86em;
+    padding: 0.1em 0.35em;
+    background: var(--bg-tint);
+    border-radius: 3px;
+  }
+
+  .side__label {
+    font-size: 0.78rem;
+    color: var(--fg-3);
+    margin-bottom: 0.6rem;
+  }
+
+  .side__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .side__stats {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .side__stats div {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.85rem;
+  }
+
+  .side__stats dt {
+    color: var(--fg-3);
+    white-space: nowrap;
+  }
+
+  .side__stats dd {
+    color: var(--fg);
+    text-align: right;
+  }
+
+  .side__repo {
+    display: inline-block;
+    margin-top: 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .side__note {
+    margin-top: 0.75rem;
+    font-size: 0.76rem;
+    color: var(--fg-3);
+  }
+
+  /* 架构图 */
+  .figure {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .figure img {
+    width: 100%;
+    display: block;
+  }
+
+  .figure__scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .figure__hint {
+    display: none;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--fg-3);
+    text-align: center;
+  }
+
+  @media (max-width: 720px) {
+    .figure__scroll img {
+      min-width: 720px;
+    }
+    .figure__hint {
+      display: block;
+    }
+  }
+
+  .figure figcaption {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.78rem;
+    color: var(--fg-3);
+    border-top: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+
+  /* 模块列表 */
+  .modules {
+    border-top: 1px solid var(--line);
+  }
+
+  .modules li {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .module {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    gap: 1.25rem;
+    align-items: start;
+    padding-block: 1.15rem;
+    transition: background 0.2s;
+  }
+
+  .module:hover {
+    background: var(--bg-soft);
+  }
+
+  .module__no {
+    font-family: var(--f-mono);
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    padding-top: 0.15rem;
+  }
+
+  .module__main h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+
+  .module:hover h3 {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--line-2);
+    text-decoration-thickness: 1px;
+  }
+
+  .module__main p {
+    font-size: 0.88rem;
+    line-height: 1.7;
+    color: var(--fg-2);
+    max-width: 68ch;
+  }
+
+  .module__hl {
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    color: var(--fg-3);
+  }
+
+  .module__meta {
+    font-size: 0.78rem;
+    color: var(--fg-3);
+    white-space: nowrap;
+    padding-top: 0.2rem;
+  }
+
+  /* 设计取向 */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 2.5rem;
+  }
+
+  .principles li {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .principles__no {
+    font-family: var(--f-mono);
+    font-size: 0.75rem;
+    color: var(--fg-3);
+    padding-top: 0.2rem;
+  }
+
+  .principles h3 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+  }
+
+  .principles p {
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: var(--fg-2);
+  }
+
+  /* 未完成 */
+  .gaps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .gaps li {
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-soft);
+  }
+
+  .gaps h3 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  .gaps p {
+    font-size: 0.84rem;
+    line-height: 1.7;
+    color: var(--fg-2);
+  }
+
+  @media (max-width: 860px) {
+    .intro,
+    .principles,
+    .gaps {
+      grid-template-columns: 1fr;
+    }
+    .module {
+      grid-template-columns: 32px minmax(0, 1fr);
+    }
+    .module__meta {
+      display: none;
+    }
+  }
+</style>

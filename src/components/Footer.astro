@@ -1,0 +1,55 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { site } from '../site.config';
+
+const year = new Date().getFullYear();
+const resumeFile = path.join(process.cwd(), 'public', site.resume.replace(/^\//, ''));
+const hasResume = fs.existsSync(resumeFile);
+---
+
+<footer class="ftr">
+  <div class="wrap ftr__inner">
+    <p class="ftr__copy">© {year} {site.name}</p>
+    <ul class="ftr__links">
+      <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+      {site.links.map((l) => (
+        <li><a href={l.url} target="_blank" rel="noopener noreferrer">{l.label}</a></li>
+      ))}
+      {hasResume && <li><a href={site.resume} download>简历</a></li>}
+    </ul>
+  </div>
+</footer>
+
+<style>
+  .ftr {
+    margin-top: clamp(3rem, 6vw, 5rem);
+    border-top: 1px solid var(--line);
+  }
+
+  .ftr__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    padding-block: 1.5rem;
+    font-size: 0.82rem;
+    color: var(--fg-3);
+  }
+
+  .ftr__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+  }
+
+  .ftr__links a {
+    color: var(--fg-2);
+    transition: color 0.2s;
+  }
+
+  .ftr__links a:hover {
+    color: var(--fg);
+  }
+</style>

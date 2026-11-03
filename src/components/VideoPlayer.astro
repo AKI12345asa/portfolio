@@ -1,0 +1,156 @@
+---
+interface VideoData {
+  type: 'bilibili' | 'youtube' | 'local';
+  id?: string;
+  src?: string;
+  poster?: string;
+  label?: string;
+  aspect?: 'landscape' | 'portrait';
+}
+
+interface Props {
+  video: VideoData;
+  poster?: string;
+}
+
+const { video, poster: fallbackPoster } = Astro.props;
+
+const posterSrc = video.poster ?? fallbackPoster ?? '/covers/placeholder.svg';
+const isPortrait = video.aspect === 'portrait';
+
+const embedSrc =
+  video.type === 'bilibili'
+    ? `https://player.bilibili.com/player.html?bvid=${video.id}&autoplay=1&high_quality=1&danmaku=0&as_wide=1`
+    : video.type === 'youtube'
+      ? `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0&modestbranding=1`
+      : null;
+
+const platform = video.type === 'bilibili' ? 'bilibili' : video.type === 'youtube' ? 'YouTube' : '视频';
+---
+
+<figure class:list={['video', { 'video--portrait': isPortrait }]}>
+  <div class="video__frame-wrap" data-frame>
+    {
+      video.type === 'local' ? (
+        <video class="video__frame" controls preload="none" poster={posterSrc} playsinline>
+          <source src={video.src} />
+          你的浏览器不支持内嵌视频，<a href={video.src}>点此下载</a>。
+        </video>
+      ) : (
+        <button
+          type="button"
+          class="video__facade"
+          data-embed={embedSrc}
+          data-embed-title={video.label ?? '演示视频'}
+          aria-label={`播放视频：${video.label ?? '演示视频'}`}
+        >
+          <img src={posterSrc} alt="" loading="lazy" decoding="async" />
+          <span class="video__play" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5.4v13.2c0 .6.66.97 1.17.65l10.4-6.6a.77.77 0 0 0 0-1.3L9.17 4.75A.77.77 0 0 0 8 5.4Z" />
+            </svg>
+          </span>
+          <span class="video__hint">{platform}</span>
+        </button>
+      )
+    }
+  </div>
+  {video.label && <figcaption class="video__label">{video.label}</figcaption>}
+</figure>
+
+<style>
+  .video {
+    margin: 0;
+    width: 100%;
+  }
+
+  .video__frame-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+
+  .video--portrait {
+    max-width: 340px;
+  }
+
+  .video--portrait .video__frame-wrap {
+    aspect-ratio: 9 / 16;
+  }
+
+  .video__facade {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border-radius: inherit;
+  }
+
+  .video__facade img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.2s var(--ease);
+  }
+
+  .video__facade:hover img {
+    opacity: 0.9;
+  }
+
+  .video__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--fg);
+    color: #fff;
+    transition: transform 0.2s var(--ease);
+  }
+
+  .video__play svg {
+    width: 20px;
+    height: 20px;
+    margin-left: 2px;
+  }
+
+  .video__facade:hover .video__play {
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+
+  .video__hint {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.6rem;
+    font-size: 0.72rem;
+    color: var(--fg-2);
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--line);
+    padding: 0.05rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  .video__frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+  }
+
+  .video__label {
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--fg-3);
+  }
+</style>

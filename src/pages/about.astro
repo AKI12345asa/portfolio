@@ -1,0 +1,234 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+import { site, aboutParagraphs } from '../site.config';
+---
+
+<BaseLayout title="关于" description={`${site.name} · ${site.role} 的个人介绍、技能与经历。`}>
+  <PageHero title="关于" lead={site.tagline} />
+
+  <div class="wrap body">
+    <section class="block">
+      <p class="block__label label">介绍</p>
+      <div class="prose">
+        {aboutParagraphs.map((p) => <p>{p}</p>)}
+      </div>
+    </section>
+
+    <section class="block">
+      <p class="block__label label">经历</p>
+      <ol class="timeline">
+        {
+          site.experience.map((job) => (
+            <li class="timeline__item">
+              <div class="timeline__when">{job.period}</div>
+              <div class="timeline__what">
+                <h3>
+                  {job.org}
+                  <span class="timeline__role">{job.role}</span>
+                </h3>
+                <ul>
+                  {job.points.map((p) => (
+                    <li>{p}</li>
+                  ))}
+                </ul>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+
+    <section class="block">
+      <p class="block__label label">技术栈</p>
+      <div class="stack">
+        {
+          site.skills.map((group) => (
+            <div class="stack__group">
+              <h3>{group.group}</h3>
+              <ul>
+                {group.items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section class="block">
+      <p class="block__label label">联系</p>
+      <ul class="contact">
+        <li>
+          <span class="contact__k">邮箱</span>
+          <a href={`mailto:${site.email}`}>{site.email}</a>
+        </li>
+        {
+          site.links.map((l) => (
+            <li>
+              <span class="contact__k">{l.label}</span>
+              <a href={l.url} target="_blank" rel="noopener noreferrer">
+                {l.url.replace(/^https?:\/\//, '')}
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <span class="contact__k">地点</span>
+          <span>{site.location}</span>
+        </li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .body {
+    padding-top: 1rem;
+    padding-bottom: 2rem;
+  }
+
+  .block {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-block: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .block:last-child {
+    border-bottom: none;
+  }
+
+  .block__label {
+    padding-top: 0.3rem;
+  }
+
+  .block .prose p:first-child {
+    margin-top: 0;
+  }
+
+  /* 经历 */
+  .timeline__item {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 1.5rem;
+    padding-block: 1rem;
+  }
+
+  .timeline__item + .timeline__item {
+    border-top: 1px solid var(--line);
+  }
+
+  .timeline__when {
+    font-size: 0.82rem;
+    color: var(--fg-3);
+    padding-top: 0.15rem;
+  }
+
+  .timeline__what h3 {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.98rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .timeline__role {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--fg-3);
+  }
+
+  .timeline__what ul {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+    color: var(--fg-2);
+  }
+
+  .timeline__what li {
+    position: relative;
+    padding-left: 0.9rem;
+  }
+
+  .timeline__what li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.72em;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--line-2);
+  }
+
+  /* 技术栈 */
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+  }
+
+  .stack__group h3 {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--fg-3);
+    margin-bottom: 0.5rem;
+  }
+
+  .stack__group li {
+    font-size: 0.9rem;
+    color: var(--fg-2);
+    padding-block: 0.22rem;
+  }
+
+  /* 联系 */
+  .contact {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.92rem;
+  }
+
+  .contact li {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .contact__k {
+    color: var(--fg-3);
+    font-size: 0.85rem;
+  }
+
+  .contact a {
+    color: var(--fg);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+    word-break: break-all;
+  }
+
+  .contact a:hover {
+    border-bottom-color: var(--line-2);
+  }
+
+  @media (max-width: 760px) {
+    .block {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      padding-block: 1.5rem;
+    }
+    .timeline__item {
+      grid-template-columns: 1fr;
+      gap: 0.35rem;
+    }
+    .stack {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

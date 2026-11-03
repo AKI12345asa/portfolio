@@ -1,0 +1,167 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { site } from '../site.config';
+
+const pathname = Astro.url.pathname;
+
+const nav = [
+  { href: '/#projects', label: '项目', active: false },
+  { href: '/framework/', label: '框架', active: /^\/framework/.test(pathname) },
+  { href: '/#stack', label: '技术栈', active: false },
+  { href: '/about/', label: '关于', active: /^\/about/.test(pathname) },
+];
+
+const resumeFile = path.join(process.cwd(), 'public', site.resume.replace(/^\//, ''));
+const hasResume = fs.existsSync(resumeFile);
+---
+
+<header class="hdr">
+  <div class="hdr__inner wrap">
+    <a class="logo" href="/">{site.name}</a>
+
+    <nav class="nav" data-nav aria-label="主导航">
+      {nav.map((item) => (
+        <a class:list={['nav__link', { 'is-active': item.active }]} href={item.href}>
+          {item.label}
+        </a>
+      ))}
+      {hasResume && (
+        <a class="nav__resume" href={site.resume} download>简历</a>
+      )}
+    </nav>
+
+    <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="打开导航菜单">
+      <span></span>
+      <span></span>
+    </button>
+  </div>
+</header>
+
+<style>
+  .hdr {
+    position: fixed;
+    inset-inline: 0;
+    top: 0;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .hdr__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    height: var(--hdr);
+  }
+
+  .logo {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+  }
+
+  .nav__link {
+    font-size: 0.88rem;
+    color: var(--fg-2);
+    transition: color 0.2s;
+  }
+
+  .nav__link:hover,
+  .nav__link.is-active {
+    color: var(--fg);
+  }
+
+  .nav__resume {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.82rem;
+    color: var(--fg);
+    border: 1px solid var(--line-2);
+    border-radius: 6px;
+    transition: border-color 0.2s;
+  }
+
+  .nav__resume:hover {
+    border-color: var(--fg);
+  }
+
+  .nav-toggle {
+    display: none;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+  }
+
+  .nav-toggle span {
+    display: block;
+    width: 16px;
+    height: 1.5px;
+    background: var(--fg);
+    transition: transform 0.2s var(--ease);
+  }
+
+  .nav-toggle span + span {
+    margin-top: 5px;
+  }
+
+  .nav-toggle[aria-expanded='true'] span:first-child {
+    transform: translateY(3.25px) rotate(45deg);
+  }
+
+  .nav-toggle[aria-expanded='true'] span:last-child {
+    transform: translateY(-3.25px) rotate(-45deg);
+  }
+
+  @media (max-width: 720px) {
+    .nav-toggle {
+      display: grid;
+    }
+
+    .nav {
+      position: fixed;
+      inset-inline: 0;
+      top: var(--hdr);
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      padding: 0.5rem var(--pad) 1.2rem;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-4px);
+      transition: opacity 0.18s var(--ease), transform 0.18s var(--ease),
+        visibility 0.18s;
+    }
+
+    .nav.is-open {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
+    .nav__link {
+      padding: 0.7rem 0;
+      font-size: 0.95rem;
+    }
+
+    .nav__link + .nav__link {
+      border-top: 1px solid var(--line);
+      width: 100%;
+    }
+
+    .nav__resume {
+      margin-top: 0.8rem;
+    }
+  }
+</style>

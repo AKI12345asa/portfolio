@@ -1,0 +1,36 @@
+# 依赖
+node_modules/
+
+# 构建产物
+dist/
+.astro/
+
+# 本地截图（自检用）
+.shots/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+*.log
+
+# Office 打开文档时生成的临时锁文件
+~$*
+
+# 编辑器
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# 环境变量
+.env
+.env.production
+
+# 本地文档工具（mermaid 渲染）
+.tools/
+
+# 本地测试产物（配音试听、临时对比图）
+.tts-demo/
+
+# 原始录屏：体积大（1.8GB），视频托管在腾讯云 COS，不进仓库
+# 发布用的压缩版在 Demo录制/发布版/，需要时手动上传 COS
+Demo录制/

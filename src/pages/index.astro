@@ -1,0 +1,408 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site, aboutParagraphs } from '../site.config';
+
+// 框架模块
+const modules = (await getCollection('framework')).sort((a, b) => a.data.order - b.data.order);
+const fwFiles = modules.reduce((n, m) => n + (m.data.files ?? 0), 0);
+const fwLines = modules.reduce((n, m) => n + (m.data.lines ?? 0), 0);
+---
+
+<BaseLayout>
+  <!-- 标题 -->
+  <section class="hero">
+    <div class="wrap">
+      <h1 class="hero__title">Unity 作品集</h1>
+    </div>
+  </section>
+
+  <!-- 自研框架 -->
+  <section class="section" id="framework">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>自研框架</h2>
+        <a class="more" href="/framework/">
+          总览与流程图 →
+        </a>
+      </div>
+
+      <div class="fw">
+        <div class="fw__intro">
+          <h3 class="fw__name">MyFrame</h3>
+          <p class="fw__desc">
+            一套面向动作游戏的 Unity 客户端框架。不含业务逻辑，只规定三件事：数据怎么描述、表现怎么挂接、每帧谁来驱动。
+          </p>
+          <p class="meta fw__meta">
+            <span>{modules.length} 个模块</span>
+            <i aria-hidden="true"></i>
+            <span>{fwFiles} 文件</span>
+            <i aria-hidden="true"></i>
+            <span>{fwLines.toLocaleString()} 行</span>
+          </p>
+          <div class="fw__actions">
+            <a class="btn btn--ghost" href="/framework/">看每个模块的工作流</a>
+            <a class="tlink" href={site.frameworkRepo} target="_blank" rel="noopener noreferrer">
+              GitHub
+            </a>
+          </div>
+        </div>
+
+        <ol class="fw__list">
+          {
+            modules.map((m, i) => (
+              <li>
+                <a href={`/framework/${m.id}/`}>
+                  <span class="fw__no">{String(i + 1).padStart(2, '0')}</span>
+                  <span class="fw__title">{m.data.title}</span>
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- 项目 -->
+  <section class="section" id="projects">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>项目</h2>
+      </div>
+
+      <ul class="proj">
+        {
+          site.projects.map((p) => (
+            <li class="proj__item">
+              <span class="proj__name">{p.name}</span>
+              {p.url ? (
+                <a class="tlink proj__link" href={p.url} target="_blank" rel="noopener noreferrer">
+                  {p.label}
+                </a>
+              ) : (
+                <span class="proj__pending">视频待上传</span>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- 技术栈 -->
+  <section class="section" id="stack">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>技术栈</h2>
+      </div>
+
+      <div class="stack">
+        {
+          site.skills.map((group) => (
+            <div class="stack__group">
+              <h3>{group.group}</h3>
+              <ul>
+                {group.items.map((item) => (
+                  <li>{item}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- 关于 + 联系 -->
+  <section class="section" id="about">
+    <div class="wrap about">
+      <div class="section-head">
+        <h2>关于</h2>
+        <a class="more" href="/about/">详细经历 →</a>
+      </div>
+
+      <div class="about__grid">
+        <div class="about__text">
+          {aboutParagraphs.map((p) => <p>{p}</p>)}
+        </div>
+
+        <div class="about__contact">
+          <p class="label">联系</p>
+          <a class="about__mail" href={`mailto:${site.email}`}>{site.email}</a>
+          <ul class="about__links">
+            {site.links.map((l) => (
+              <li>
+                <a class="tlink" href={l.url} target="_blank" rel="noopener noreferrer">
+                  {l.label}
+                  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                    <path d="M5.5 10.5 10.5 5.5M10.5 5.5H6.3M10.5 5.5v4.2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ---------- 简介 ---------- */
+  .hero {
+    padding-top: clamp(2.5rem, 5vw, 3.5rem);
+    padding-bottom: clamp(0.5rem, 1.5vw, 1rem);
+  }
+
+  .hero__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.85rem;
+    color: var(--fg-2);
+    margin-bottom: 1.5rem;
+  }
+
+  .hero__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--fg-3);
+  }
+
+  .hero__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--fg-3);
+  }
+
+  .hero__eyebrow i {
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: var(--line-2);
+  }
+
+  .hero__title {
+    max-width: 30em;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.02em;
+  }
+
+  .hero__tagline {
+    max-width: 52ch;
+    margin-top: 1.5rem;
+    font-size: 1rem;
+    line-height: 1.85;
+    color: var(--fg-2);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.75rem;
+  }
+
+  .hero__meta {
+    margin-top: 1.75rem;
+  }
+
+  /* ---------- 作品 ---------- */
+  .catalog {
+    margin-bottom: 0.5rem;
+  }
+
+  /* ---------- 自研框架 ---------- */
+  .fw {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: start;
+    padding: clamp(1.25rem, 3vw, 2rem);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--bg-soft);
+  }
+
+  .fw__name {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  .fw__desc {
+    margin-top: 0.55rem;
+    font-size: 0.9rem;
+    line-height: 1.85;
+    color: var(--fg-2);
+  }
+
+  .fw__meta {
+    margin-top: 0.9rem;
+  }
+
+  .fw__actions {
+    display: flex;
+    align-items: center;
+    gap: 1.1rem;
+    margin-top: 1.1rem;
+  }
+
+  .fw__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .fw__list li {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .fw__list a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding-block: 0.5rem;
+    font-size: 0.87rem;
+  }
+
+  .fw__no {
+    font-family: var(--f-mono);
+    font-size: 0.7rem;
+    color: var(--fg-3);
+  }
+
+  .fw__title {
+    color: var(--fg-2);
+    transition: color 0.2s;
+  }
+
+  .fw__list a:hover .fw__title {
+    color: var(--fg);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--line-2);
+  }
+
+  /* ---------- 技术栈 ---------- */
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem 2.5rem;
+  }
+
+  .stack__group h3 {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--fg-3);
+    margin-bottom: 0.6rem;
+  }
+
+  .stack__group li {
+    font-size: 0.92rem;
+    color: var(--fg-2);
+    padding-block: 0.28rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stack__group li:last-child {
+    border-bottom: none;
+  }
+
+  /* ---------- 关于 ---------- */
+  .about__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 3.5rem);
+    align-items: start;
+  }
+
+  .about__text p {
+    font-size: 0.97rem;
+    line-height: 1.9;
+    color: var(--fg-2);
+  }
+
+  .about__text p + p {
+    margin-top: 1em;
+  }
+
+  .about__contact {
+    padding-top: 0.2rem;
+  }
+
+  .about__mail {
+    display: inline-block;
+    margin-top: 0.35rem;
+    font-size: 0.95rem;
+    color: var(--fg);
+    border-bottom: 1px solid var(--line-2);
+    transition: border-color 0.2s;
+  }
+
+  .about__mail:hover {
+    border-bottom-color: var(--fg);
+  }
+
+  .about__links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 1.1rem;
+  }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width: 900px) {
+    .stack {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    .about__grid {
+      grid-template-columns: 1fr;
+    }
+    .fw {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .fw__list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ---------- 项目 ---------- */
+  .proj {
+    border-top: 1px solid var(--line);
+  }
+
+  .proj__item {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.05rem 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .proj__name {
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .proj__link {
+    font-size: 0.88rem;
+  }
+
+  .proj__pending {
+    font-size: 0.82rem;
+    color: var(--fg-3);
+  }
+</style>

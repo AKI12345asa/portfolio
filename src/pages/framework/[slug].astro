@@ -1,0 +1,364 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const all = await getCollection('framework');
+  const modules = all.sort((a, b) => a.data.order - b.data.order);
+  return modules.map((entry, i) => ({
+    params: { slug: entry.id },
+    props: {
+      entry,
+      prev: modules[i - 1] ?? null,
+      next: modules[i + 1] ?? null,
+    },
+  }));
+}
+
+const { entry, prev, next } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+---
+
+<BaseLayout title={`${d.title} · 自研框架`} description={d.summary} type="article">
+  <article>
+    <header class="whead">
+      <div class="wrap">
+        <a class="back" href="/framework/">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M13 8H3m0 0 4-4m-4 4 4 4" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          框架总览
+        </a>
+
+        <p class="meta">
+          <span>MyFrame</span>
+          <i aria-hidden="true"></i>
+          <span>模块 {String(d.order).padStart(2, '0')}</span>
+          {d.files && (
+            <>
+              <i aria-hidden="true"></i>
+              <span>{d.files} 文件 · {d.lines?.toLocaleString()} 行</span>
+            </>
+          )}
+        </p>
+
+        <h1 class="whead__title">{d.title}</h1>
+        <p class="whead__summary">{d.summary}</p>
+
+        {
+          d.highlight && (
+            <p class="whead__hl">
+              <span class="whead__hl-dot" aria-hidden="true" />
+              {d.highlight}
+            </p>
+          )
+        }
+
+        {
+          d.stack.length > 0 && (
+            <ul class="tag-list whead__tags">
+              {d.stack.map((s) => (
+                <li class="tag">{s}</li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+    </header>
+
+    {
+      d.diagram && (
+        <div class="wrap media">
+          <figure class="figure">
+            <div class="figure__scroll">
+              <img src={d.diagram} alt={`${d.title}工作流程图`} loading="eager" decoding="async" />
+            </div>
+            {d.diagramCaption && <figcaption>工作流程 · {d.diagramCaption}</figcaption>}
+          </figure>
+          <p class="figure__hint">← 左右滑动查看完整流程图 →</p>
+        </div>
+      )
+    }
+
+    <div class="wrap body">
+      <div class="prose">
+        <Content />
+      </div>
+
+      <aside class="side">
+        <div class="side__box">
+          <p class="label">模块信息</p>
+          <dl class="side__list">
+            <div><dt>所属</dt><dd>MyFrame 自研框架</dd></div>
+            {d.files && <div><dt>代码量</dt><dd>{d.files} 文件 · {d.lines?.toLocaleString()} 行</dd></div>}
+            {
+              d.stack.length > 0 && (
+                <div>
+                  <dt>技术</dt>
+                  <dd class="side__stack">
+                    {d.stack.map((s) => (
+                      <span class="tag">{s}</span>
+                    ))}
+                  </dd>
+                </div>
+              )
+            }
+          </dl>
+        </div>
+        <a class="side__back" href="/framework/">← 返回框架总览</a>
+        <a class="side__back" href="/#contact">关于框架的实现，欢迎邮件交流</a>
+      </aside>
+    </div>
+
+    <nav class="wrap pager" aria-label="模块导航">
+      {
+        prev ? (
+          <a class="pager__link" href={`/framework/${prev.id}/`}>
+            <span class="pager__label">上一个模块</span>
+            <span class="pager__title">{prev.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+      {
+        next ? (
+          <a class="pager__link pager__link--next" href={`/framework/${next.id}/`}>
+            <span class="pager__label">下一个模块</span>
+            <span class="pager__title">{next.data.title}</span>
+          </a>
+        ) : (
+          <span />
+        )
+      }
+    </nav>
+  </article>
+</BaseLayout>
+
+<style>
+  .whead {
+    padding-top: clamp(1.5rem, 3vw, 2.5rem);
+    padding-bottom: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.82rem;
+    color: var(--fg-3);
+    transition: color 0.2s;
+  }
+
+  .back svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .back:hover {
+    color: var(--fg);
+  }
+
+  .whead__title {
+    margin-top: 0.7rem;
+    font-size: clamp(1.6rem, 3.6vw, 2.25rem);
+    font-weight: 600;
+    line-height: 1.28;
+    letter-spacing: -0.02em;
+  }
+
+  .whead__summary {
+    max-width: 62ch;
+    margin-top: 0.8rem;
+    font-size: 1rem;
+    line-height: 1.85;
+    color: var(--fg-2);
+  }
+
+  .whead__hl {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55rem;
+    margin-top: 1rem;
+    font-size: 0.92rem;
+    color: var(--fg);
+  }
+
+  .whead__hl-dot {
+    width: 5px;
+    height: 5px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--fg);
+    transform: translateY(-2px);
+  }
+
+  .whead__tags {
+    margin-top: 1.1rem;
+  }
+
+  .media {
+    margin-bottom: clamp(2rem, 4vw, 3rem);
+  }
+
+  .figure {
+    margin: 0;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .figure img {
+    width: 100%;
+    display: block;
+  }
+
+  .figure__scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .figure__hint {
+    display: none;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--fg-3);
+    text-align: center;
+  }
+
+  @media (max-width: 720px) {
+    .figure__scroll img {
+      min-width: 760px;
+    }
+    .figure__hint {
+      display: block;
+    }
+  }
+
+  .figure figcaption {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.78rem;
+    color: var(--fg-3);
+    border-top: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+
+  .body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 240px;
+    gap: clamp(2rem, 5vw, 3.5rem);
+    align-items: start;
+  }
+
+  .side {
+    position: sticky;
+    top: calc(var(--hdr) + 1.5rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .side__box {
+    padding: 1.1rem 1.2rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-soft);
+  }
+
+  .side__box .label {
+    display: block;
+    margin-bottom: 0.7rem;
+  }
+
+  .side__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+    font-size: 0.84rem;
+  }
+
+  .side__list dt {
+    font-size: 0.74rem;
+    color: var(--fg-3);
+    margin-bottom: 0.2rem;
+  }
+
+  .side__list dd {
+    color: var(--fg);
+  }
+
+  .side__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .side__back {
+    font-size: 0.82rem;
+    color: var(--fg-3);
+    transition: color 0.2s;
+  }
+
+  .side__back:hover {
+    color: var(--fg);
+  }
+
+  .pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .pager__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .pager__link--next {
+    text-align: right;
+    align-items: flex-end;
+  }
+
+  .pager__label {
+    font-size: 0.78rem;
+    color: var(--fg-3);
+  }
+
+  .pager__title {
+    font-size: 0.92rem;
+    color: var(--fg);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
+  }
+
+  .pager__link:hover .pager__title {
+    border-bottom-color: var(--line-2);
+  }
+
+  @media (max-width: 860px) {
+    .body {
+      grid-template-columns: 1fr;
+    }
+    .side {
+      position: static;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .pager {
+      grid-template-columns: 1fr;
+    }
+    .pager__link--next {
+      display: none;
+    }
+  }
+</style>

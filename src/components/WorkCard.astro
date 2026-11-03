@@ -1,0 +1,139 @@
+---
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  work: CollectionEntry<'works'>;
+  /** 分组列表里大类已经在标题上了，就不用重复显示 */
+  showCategory?: boolean;
+}
+
+const { work, showCategory = false } = Astro.props;
+const { title, summary, year, role, category, stack, cover } = work.data;
+const href = `/works/${work.id}/`;
+---
+
+<a class="work" href={href}>
+  <div class="work__thumb">
+    {cover ? (
+      <img src={cover} alt="" loading="lazy" decoding="async" />
+    ) : (
+      <span class="work__placeholder" aria-hidden="true"></span>
+    )}
+  </div>
+
+  <div class="work__body">
+    <p class="meta">
+      {showCategory && (
+        <>
+          <span>{category}</span>
+          <i aria-hidden="true"></i>
+        </>
+      )}
+      <span>{year}</span>
+      <i class="meta__sep" aria-hidden="true"></i>
+      <span class="meta__role">{role}</span>
+    </p>
+
+    <h3 class="work__title">{title}</h3>
+    <p class="work__summary">{summary}</p>
+
+    {
+      stack.length > 0 && (
+        <ul class="tag-list">
+          {stack.map((s) => (
+            <li class="tag">{s}</li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</a>
+
+<style>
+  .work {
+    display: grid;
+    grid-template-columns: 190px minmax(0, 1fr);
+    gap: 1.5rem;
+    align-items: start;
+    padding-block: 1.35rem;
+  }
+
+  .work__thumb {
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--bg-soft);
+  }
+
+  .work__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.2s var(--ease);
+  }
+
+  .work:hover .work__thumb img {
+    opacity: 0.85;
+  }
+
+  .work__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-tint);
+  }
+
+  .work__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  .work__title {
+    font-size: 1.02rem;
+    font-weight: 600;
+    line-height: 1.45;
+    margin-top: 0.1rem;
+  }
+
+  .work:hover .work__title {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+    text-decoration-color: var(--line-2);
+  }
+
+  .work__summary {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--fg-2);
+  }
+
+  .work .tag-list {
+    margin-top: 0.4rem;
+  }
+
+  @media (max-width: 620px) {
+    .work {
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: 1rem;
+      padding-block: 1.1rem;
+    }
+
+    /* 手机上分行太碎，只留大类/年份 */
+    .meta__role,
+    .meta__sep {
+      display: none;
+    }
+
+    .work__summary {
+      font-size: 0.86rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+  }
+</style>
