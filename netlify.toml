@@ -1,0 +1,22 @@
+# Netlify 构建配置
+# 放在这里的好处：构建命令和发布目录跟着仓库走，不依赖控制台里是否点对。
+# （之前控制台里构建命令为空，Netlify 就把源码目录当成了网站，导致全站 404）
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  # Astro 5 要求 Node 18.20.8+ / 20.3+ / 22+，锁定 LTS 保证可重现
+  NODE_VERSION = "20"
+
+# 静态资源长缓存；HTML 不缓存，保证改完立刻生效
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
