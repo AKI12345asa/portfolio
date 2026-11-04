@@ -42,9 +42,3 @@ lines: 1540
 
 一个本来只负责事件转发的组件被当成生命周期钩子用了。上一个模块里「实例销毁即自动释放」就是靠这条路径实现的。
 
-## 已知问题
-
-- `AddTypeEventListener<T>` / `TypeEventTrigger<T>` 用 `nameof(T)` 当 key。按 C# 规范，`nameof` 作用于类型参数返回的是字符串 `"T"`，所有类型事件会挤在同一个 key 上。这两个 API 目前不可用，正确写法是 `typeof(T).Name`。
-- 同一个 key 换签名只能在运行期抛 `InvalidCastException`，没有编译期保护。
-- `EventModule` 九参 `EventTrigger` 少了一个 `?.`，空委托时会 NRE。
-- 退订只清委托不删 key，会残留空条目。

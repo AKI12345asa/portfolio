@@ -78,6 +78,3 @@ public static void ConnectNode(this Edge edge) {
 
 树结构、编辑器、序列化都不需要改。
 
-## 已知问题
-
-数据层里的 `PortInfo` 用了 `UnityEditor.Experimental.GraphView.Port.Capacity`，`NodeTreeDataProcessor` 也 `using UnityEditor`，这会让数据层带进编辑器引用。目前靠 `#if` 和编辑器环境规避。如果要把它做成纯运行时资产，这处需要换成一个自定义枚举。

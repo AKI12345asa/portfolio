@@ -48,8 +48,3 @@ lines: 4914
 5. `XxxEventInspector : SkillEventDataInspectorBase`，右侧面板；
 6. 在 `InitTrack()` 和 `SkillEditorInspector.Show()` 的 switch 里各注册一处。
 
-## 已知问题
-
-- 缩放时会全量重建所有条目，事件多的技能会有明显卡顿；
-- 用反射调 `UnityEditor.AudioUtil` 来试听音效，Unity 版本升级时可能失效；
-- 相机事件轨道在停止播放时不复位相机优先级与姿态。

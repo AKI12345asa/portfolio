@@ -40,8 +40,3 @@ public class MainMenuWindow : UIWindowBase { }
 | `UIWindowBase` | 窗口基类，提供生命周期回调 |
 | `UILayout` | 一层 UI，负责遮罩与排序 |
 
-## 已知问题
-
-- 运行时不会重新扫描特性，窗口表来自资产里已序列化的字典。新增窗口后必须在编辑器里保存一次资产，否则打包后 `ShowWindow` 会抛「没有注册过」。
-- `ShowWindow<T>` 用 `typeof(T).Name` 查表，而特性注册时用的是 `FullName`，两者对不上，按类型开窗会失败。
-- 关闭窗口时不会回对象池，`assetPath` 当作池名的那条分支实际很少命中。
