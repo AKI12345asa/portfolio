@@ -186,14 +186,20 @@ async function evaluate(expression) {
 
 console.log('\n--- 交互自检 ---');
 
+await open('/', 1440, 900);
 console.log(
   await evaluate(`(async () => {
-    const btn = document.querySelector('[data-embed]');
-    if (!btn) return 'FAIL 找不到视频封面按钮';
+    const btn = document.querySelector('[data-video]');
+    if (!btn) return 'FAIL 找不到「播放演示视频」按钮';
     btn.click();
-    const frame = document.querySelector('.video__frame');
-    if (!frame) return 'FAIL 点击后没有插入 iframe';
-    return 'OK 视频门面 → ' + frame.tagName + ' src=' + (frame.getAttribute('src') || '').slice(0, 42);
+    await new Promise(r => setTimeout(r, 200));
+    const modal = document.querySelector('[data-vmodal]');
+    const v = document.querySelector('[data-vmodal-video]');
+    const opened = !!modal && !modal.hidden && !!v && !!v.getAttribute('src');
+    document.querySelector('[data-vmodal-close]').click();
+    await new Promise(r => setTimeout(r, 150));
+    const closed = modal.hidden && !v.getAttribute('src');
+    return (opened && closed ? 'OK' : 'FAIL') + ' 视频弹窗 开=' + opened + ' 关=' + closed;
   })()`)
 );
 

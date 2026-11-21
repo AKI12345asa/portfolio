@@ -76,12 +76,16 @@ const fwLines = modules.reduce((n, m) => n + (m.data.lines ?? 0), 0);
           site.projects.map((p) => (
             <li class="proj__item">
               <span class="proj__name">{p.name}</span>
-              {p.url ? (
+              {!p.url ? (
+                <span class="proj__pending">视频待上传</span>
+              ) : p.label === '演示视频' ? (
+                <button class="tlink proj__link" type="button" data-video={p.url} data-video-title={p.name}>
+                  播放演示视频
+                </button>
+              ) : (
                 <a class="tlink proj__link" href={p.url} target="_blank" rel="noopener noreferrer">
                   {p.label}
                 </a>
-              ) : (
-                <span class="proj__pending">视频待上传</span>
               )}
             </li>
           ))
@@ -89,6 +93,58 @@ const fwLines = modules.reduce((n, m) => n + (m.data.lines ?? 0), 0);
       </ul>
     </div>
   </section>
+
+  <!-- 视频弹窗 -->
+  <div class="vmodal" data-vmodal hidden>
+    <div class="vmodal__backdrop" data-vmodal-close></div>
+    <div class="vmodal__box" role="dialog" aria-modal="true" aria-label="演示视频">
+      <div class="vmodal__head">
+        <span class="vmodal__title" data-vmodal-title></span>
+        <button class="vmodal__close" type="button" data-vmodal-close aria-label="关闭">✕</button>
+      </div>
+      <video class="vmodal__video" data-vmodal-video controls playsinline preload="none"></video>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.querySelector('[data-vmodal]');
+    const player = document.querySelector('[data-vmodal-video]');
+    const titleEl = document.querySelector('[data-vmodal-title]');
+
+    function openVideo(src, name) {
+      if (!modal || !player) return;
+      if (titleEl) titleEl.textContent = name || '';
+      player.src = src;
+      modal.hidden = false;
+      document.documentElement.style.overflow = 'hidden';
+      player.play().catch(function () {});
+    }
+
+    function closeVideo() {
+      if (!modal || !player) return;
+      player.pause();
+      player.removeAttribute('src');
+      player.load();
+      modal.hidden = true;
+      document.documentElement.style.overflow = '';
+    }
+
+    document.addEventListener('click', function (e) {
+      const target = e.target;
+      if (!(target instanceof Element)) return;
+
+      const trigger = target.closest('[data-video]');
+      if (trigger) {
+        openVideo(trigger.getAttribute('data-video'), trigger.getAttribute('data-video-title'));
+        return;
+      }
+      if (target.closest('[data-vmodal-close]')) closeVideo();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && modal && !modal.hidden) closeVideo();
+    });
+  </script>
 
   <!-- 技术栈 -->
   <section class="section" id="stack">
@@ -404,5 +460,78 @@ const fwLines = modules.reduce((n, m) => n + (m.data.lines ?? 0), 0);
   .proj__pending {
     font-size: 0.82rem;
     color: var(--fg-3);
+  }
+
+  button.proj__link {
+    background: none;
+    border: 0;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  /* ---------- 视频弹窗 ---------- */
+  .vmodal[hidden] {
+    display: none;
+  }
+
+  .vmodal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: clamp(1rem, 4vw, 2.5rem);
+  }
+
+  .vmodal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(18, 18, 18, 0.74);
+  }
+
+  .vmodal__box {
+    position: relative;
+    width: min(980px, 100%);
+    background: var(--bg);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.3);
+  }
+
+  .vmodal__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0.9rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .vmodal__title {
+    font-size: 0.86rem;
+    color: var(--fg-2);
+  }
+
+  .vmodal__close {
+    padding: 0.15rem 0.45rem;
+    font-size: 0.85rem;
+    color: var(--fg-3);
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  .vmodal__close:hover {
+    color: var(--fg);
+    background: var(--bg-soft);
+  }
+
+  .vmodal__video {
+    display: block;
+    width: 100%;
+    max-height: min(72vh, 640px);
+    background: #000;
   }
 </style>
