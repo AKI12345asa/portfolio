@@ -88,12 +88,3 @@ handle = bvtTree.ScheduleBuild(boundsSlice, handle);
 ```
 
 同时补齐了 `Dispose` 和生命周期钩子，退出时不再报 `Leak Detected`。
-
-## 已知限制
-
-- **还没有性能基准数据**：没做和 Unity 内置物理、暴力 O(n²) 的对比测试，这是下一步要补的；
-- 顶层 BVH 每帧重建，没做增量更新；
-- `TransformAccessArray`、`NativeStream` 仍是每帧新建；
-- 只支持凸体，凹体需要拆成凸包组合。
-
-写在这里是想提醒自己：**没有数据的「优化」是不能下结论的**。

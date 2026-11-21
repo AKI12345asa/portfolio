@@ -26,24 +26,10 @@ const principles = [
   },
   {
     title: '池化与零分配倾向',
-    text: '两套对象池、事件条目池化、检测用 OverlapNonAlloc——GC 敏感的意识贯穿多处（落地程度不一）。',
+    text: '两套对象池、事件条目池化、检测用 OverlapNonAlloc，GC 敏感的意识贯穿多处。',
   },
 ];
 
-const decisions = [
-  {
-    name: '节点树故意不做执行器',
-    text: '框架只提供链路与条件求值，节点自己决定怎么跑。执行逻辑因此分散在各节点里，但加一种节点类型不用改树。',
-  },
-  {
-    name: 'GOAP 刻意不做严格 A*',
-    text: 'GOAP 的搜索空间是 AND/OR 树（一个动作要求所有前置成立），A* 只适用于"每个节点选一个后继"的图。硬套要先展平成世界状态图，代价高，换来的最优性在游戏里用不上。',
-  },
-  {
-    name: '输入层还没接进来',
-    text: 'InputManager 已实现，但还没挂进 InitSystems，也还没有业务侧的实现者。',
-  },
-];
 ---
 
 <BaseLayout
@@ -152,24 +138,6 @@ const decisions = [
           ))
         }
       </ol>
-    </section>
-
-    <!-- 取舍与计划 -->
-    <section class="block">
-      <div class="block__head">
-        <h2>设计取舍与后续计划</h2>
-        <p class="block__hint">有些是刻意的选择，有些是下一步的工作</p>
-      </div>
-      <ul class="gaps">
-        {
-          decisions.map((g) => (
-            <li>
-              <h3>{g.name}</h3>
-              <p>{g.text}</p>
-            </li>
-          ))
-        }
-      </ul>
     </section>
   </div>
 </BaseLayout>
@@ -426,36 +394,9 @@ const decisions = [
     color: var(--fg-2);
   }
 
-  /* 未完成 */
-  .gaps {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1rem;
-  }
-
-  .gaps li {
-    padding: 1.1rem 1.2rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
-    background: var(--bg-soft);
-  }
-
-  .gaps h3 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    margin-bottom: 0.35rem;
-  }
-
-  .gaps p {
-    font-size: 0.84rem;
-    line-height: 1.7;
-    color: var(--fg-2);
-  }
-
   @media (max-width: 860px) {
     .intro,
-    .principles,
-    .gaps {
+    .principles {
       grid-template-columns: 1fr;
     }
     .module {
